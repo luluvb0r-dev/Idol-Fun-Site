@@ -1,10 +1,10 @@
-package com.example.demo;
+package jp.co.idolFunSite;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class DemoApplicationTests {
+class IdolFunSiteApplicationTests {
 
 	@Test
 	void contextLoads() {
