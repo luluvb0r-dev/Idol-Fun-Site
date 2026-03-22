@@ -5,33 +5,31 @@ import jp.co.idolFunSite.domain.site.Site;
 import jakarta.persistence.*;
 
 /**
- * アイドルグループの基本情報を管理するエンティティ。
+ * アイドルグループ情報を管理するエンティティ
  */
 @Entity
 @Table(name = "idol_group")
 public class IdolGroup extends BaseEntity {
 
-    /** グループID */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** 所属するサイト */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "site_id", nullable = false)
     private Site site;
 
-    /** 人間が読みやすい形式のグループ表示名 */
     @Column(name = "group_name", nullable = false, length = 200)
     private String groupName;
 
-    /** グループ名の読み仮名（ソートや検索用） */
     @Column(name = "group_kana", length = 200)
     private String groupKana;
 
-    /** 登記や公式発表などで用いられる正式名称 */
     @Column(name = "official_name", length = 200)
     private String officialName;
+
+    @Column(name = "display_order", nullable = false)
+    private Integer displayOrder = 0;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -43,4 +41,6 @@ public class IdolGroup extends BaseEntity {
     public void setGroupKana(String groupKana) { this.groupKana = groupKana; }
     public String getOfficialName() { return officialName; }
     public void setOfficialName(String officialName) { this.officialName = officialName; }
+    public Integer getDisplayOrder() { return displayOrder; }
+    public void setDisplayOrder(Integer displayOrder) { this.displayOrder = displayOrder; }
 }
