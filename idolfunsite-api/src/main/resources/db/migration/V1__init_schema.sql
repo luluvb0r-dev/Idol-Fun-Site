@@ -212,7 +212,8 @@ CREATE TABLE call_type_master (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_ctm_site FOREIGN KEY (site_id) REFERENCES site(id),
-    CONSTRAINT uk_call_type UNIQUE (site_id, call_type_code)
+    CONSTRAINT uk_call_type UNIQUE (site_id, call_type_code),
+    CONSTRAINT uk_call_type_code UNIQUE (call_type_code)
 );
 CREATE INDEX idx_call_type_site_id ON call_type_master(site_id);
 
@@ -255,7 +256,8 @@ CREATE TABLE song_call_item (
     order_no INT NOT NULL DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_sci_line FOREIGN KEY (call_line_id) REFERENCES song_call_line(id)
+    CONSTRAINT fk_sci_line FOREIGN KEY (call_line_id) REFERENCES song_call_line(id),
+    CONSTRAINT fk_sci_call_type FOREIGN KEY (call_type_code) REFERENCES call_type_master(call_type_code)
 );
 CREATE INDEX idx_call_item_line_id ON song_call_item(call_line_id);
 CREATE INDEX idx_call_item_type ON song_call_item(call_type_code);
