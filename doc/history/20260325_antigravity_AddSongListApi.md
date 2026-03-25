@@ -10,4 +10,5 @@
 - 空ファイル化していた `Member.java` をDB定義に合わせて復旧し、関連リポジトリも整合するよう修正しました。
 - 未使用の重複 `domain/single` パッケージを削除し、アプリ起動時の `SingleReleaseRepository` 重複登録エラーを解消しました。
 - H2 のインメモリDBがテスト中に破棄されないよう、接続URLに `DB_CLOSE_DELAY=-1` を追加しました。
+- Spring Boot 4 で Flyway 自動設定が別モジュール化されていたため、`spring-boot-flyway` を追加して起動時マイグレーションを有効化しました。
 - `contextLoads` を安定して実行できるよう、テスト専用の `application.properties` を追加し、H2 の `create-drop` でコンテキスト起動確認ができるようにしました。
