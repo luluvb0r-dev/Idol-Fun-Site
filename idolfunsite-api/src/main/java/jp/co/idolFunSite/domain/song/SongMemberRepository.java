@@ -10,6 +10,15 @@ public interface SongMemberRepository extends JpaRepository<SongMember, Long> {
     List<SongMember> findBySongId(Long songId);
 
     /**
+     * 楽曲に紐づく歌唱メンバーを表示順で取得します。
+     *
+     * @param songId 楽曲ID
+     * @return 歌唱メンバー一覧
+     */
+    @EntityGraph(attributePaths = {"song", "member"})
+    List<SongMember> findBySongIdOrderByDisplayOrderAscIdAsc(Long songId);
+
+    /**
      * 楽曲ID一覧に紐づく歌唱メンバーをまとめて取得します。
      *
      * @param songIds 楽曲ID一覧

@@ -1,8 +1,19 @@
 package jp.co.idolFunSite.app.service.song;
 
+import jp.co.idolFunSite.app.dto.song.SongCallResponse;
+import jp.co.idolFunSite.app.dto.song.SongDetailResponse;
 import jp.co.idolFunSite.app.dto.song.SongListResponse;
 import jp.co.idolFunSite.app.dto.song.SongSearchCondition;
+import jp.co.idolFunSite.domain.call.CallType;
+import jp.co.idolFunSite.domain.call.SongCallBlock;
+import jp.co.idolFunSite.domain.call.SongCallBlockRepository;
+import jp.co.idolFunSite.domain.call.SongCallItem;
+import jp.co.idolFunSite.domain.call.SongCallItemRepository;
+import jp.co.idolFunSite.domain.call.SongCallLine;
+import jp.co.idolFunSite.domain.call.SongCallLineRepository;
 import jp.co.idolFunSite.domain.common.Status;
+import jp.co.idolFunSite.domain.master.CallTypeMaster;
+import jp.co.idolFunSite.domain.master.CallTypeMasterRepository;
 import jp.co.idolFunSite.domain.release.ReleaseSong;
 import jp.co.idolFunSite.domain.release.ReleaseSongRepository;
 import jp.co.idolFunSite.domain.site.Site;
@@ -24,6 +35,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -39,13 +51,23 @@ public class SongService {
     private final SongRepository songRepository;
     private final SongMemberRepository songMemberRepository;
     private final ReleaseSongRepository releaseSongRepository;
+    private final SongCallBlockRepository songCallBlockRepository;
+    private final SongCallLineRepository songCallLineRepository;
+    private final SongCallItemRepository songCallItemRepository;
+    private final CallTypeMasterRepository callTypeMasterRepository;
 
     public SongService(SiteRepository siteRepository, SongRepository songRepository, SongMemberRepository songMemberRepository,
-            ReleaseSongRepository releaseSongRepository) {
+            ReleaseSongRepository releaseSongRepository, SongCallBlockRepository songCallBlockRepository,
+            SongCallLineRepository songCallLineRepository, SongCallItemRepository songCallItemRepository,
+            CallTypeMasterRepository callTypeMasterRepository) {
         this.siteRepository = siteRepository;
         this.songRepository = songRepository;
         this.songMemberRepository = songMemberRepository;
         this.releaseSongRepository = releaseSongRepository;
+        this.songCallBlockRepository = songCallBlockRepository;
+        this.songCallLineRepository = songCallLineRepository;
+        this.songCallItemRepository = songCallItemRepository;
+        this.callTypeMasterRepository = callTypeMasterRepository;
     }
 
     /**
@@ -142,5 +164,182 @@ public class SongService {
             log.error("searchSongs - Error occurred while searching songs.", e);
             throw e;
         }
+    }
+
+    /**
+     * 楽曲詳細画面向けの情報を取得します。
+     *
+     * @param siteKey サイト識別子
+     * @param songId  楽曲ID
+     * @return 楽曲詳細情報
+     */
+    public SongDetailResponse getSongDetail(String siteKey, Long songId) {
+        log.info("getSongDetail - start. siteKey: {}, songId: {}", siteKey, songId);
+
+        try {
+            Site site = getPublishedSite(siteKey, "getSongDetail");
+            Song song = getSong(site.getId(), songId, "getSongDetail");
+            List<ReleaseSong> releaseSongs = releaseSongRepository.findBySongIdOrderByDisplayOrderAscIdAsc(songId);
+            List<SongMember> songMembers = songMemberRepository.findBySongIdOrderByDisplayOrderAscIdAsc(songId);
+
+            ReleaseSong primaryRelease = selectPrimaryRelease(releaseSongs);
+            SongDetailResponse response = new SongDetailResponse(
+                    song.getId(),
+                    song.getTitle(),
+                    song.getTitleKana(),
+                    song.getDescription(),
+                    song.getHasCallData(),
+                    toPrimaryReleaseResponse(primaryRelease),
+                    releaseSongs.stream().map(this::toReleaseResponse).toList(),
+                    songMembers.stream()
+                            .filter(songMember -> songMember.getRoleType() == SongRoleType.ORIGINAL_VOCAL)
+                            .sorted(Comparator.comparing(SongMember::getDisplayOrder)
+                                    .thenComparing(songMember -> songMember.getMember().getId()))
+                            .map(songMember -> new SongDetailResponse.OriginalMemberResponse(
+                                    songMember.getMember().getId(),
+                                    songMember.getMember().getMemberName(),
+                                    songMember.getMember().getMemberColorHex()))
+                            .toList());
+
+            log.info("getSongDetail - end. status: success, releaseCount: {}, memberCount: {}",
+                    response.releases().size(),
+                    response.originalMembers().size());
+            return response;
+        } catch (Exception e) {
+            log.error("getSongDetail - Error occurred while getting song detail.", e);
+            throw e;
+        }
+    }
+
+    /**
+     * 楽曲コール表示向けの情報を取得します。
+     *
+     * @param siteKey サイト識別子
+     * @param songId  楽曲ID
+     * @return 楽曲コール情報
+     */
+    public SongCallResponse getSongCalls(String siteKey, Long songId) {
+        log.info("getSongCalls - start. siteKey: {}, songId: {}", siteKey, songId);
+
+        try {
+            Site site = getPublishedSite(siteKey, "getSongCalls");
+            Song song = getSong(site.getId(), songId, "getSongCalls");
+
+            List<SongCallBlock> blocks = songCallBlockRepository.findBySongIdOrderByOrderNoAsc(songId);
+            List<Long> blockIds = blocks.stream().map(SongCallBlock::getId).toList();
+            List<SongCallLine> lines = blockIds.isEmpty()
+                    ? List.of()
+                    : songCallLineRepository.findByBlockIdInOrderByBlockIdAscLineNoAsc(blockIds);
+
+            List<Long> lineIds = lines.stream().map(SongCallLine::getId).toList();
+            List<SongCallItem> callItems = lineIds.isEmpty()
+                    ? List.of()
+                    : songCallItemRepository.findByCallLineIdInOrderByCallLineIdAscOrderNoAsc(lineIds);
+
+            Map<String, CallTypeMaster> callTypeMap = callTypeMasterRepository
+                    .findBySiteIdAndIsActiveTrueOrderByDisplayOrderAsc(site.getId())
+                    .stream()
+                    .collect(Collectors.toMap(CallTypeMaster::getCallTypeCode, Function.identity(), (left, right) -> left));
+
+            Map<Long, List<SongCallLine>> linesByBlockId = lines.stream()
+                    .collect(Collectors.groupingBy(line -> line.getBlock().getId()));
+            Map<Long, List<SongCallItem>> callItemsByLineId = callItems.stream()
+                    .collect(Collectors.groupingBy(item -> item.getCallLine().getId()));
+
+            List<SongCallResponse.BlockResponse> blockResponses = blocks.stream()
+                    .sorted(Comparator.comparing(SongCallBlock::getOrderNo).thenComparing(SongCallBlock::getId))
+                    .map(block -> new SongCallResponse.BlockResponse(
+                            block.getId(),
+                            block.getBlockType().name(),
+                            block.getBlockLabel(),
+                            block.getOrderNo(),
+                            linesByBlockId.getOrDefault(block.getId(), List.of()).stream()
+                                    .sorted(Comparator.comparing(SongCallLine::getLineNo).thenComparing(SongCallLine::getId))
+                                    .map(line -> new SongCallResponse.LineResponse(
+                                            line.getId(),
+                                            line.getLineNo(),
+                                            line.getLyrics(),
+                                            callItemsByLineId.getOrDefault(line.getId(), List.of()).stream()
+                                                    .sorted(Comparator.comparing(SongCallItem::getOrderNo)
+                                                            .thenComparing(SongCallItem::getId))
+                                                    .map(callItem -> toCallItemResponse(callItem, callTypeMap))
+                                                    .toList()))
+                                    .toList()))
+                    .toList();
+
+            SongCallResponse response = new SongCallResponse(song.getId(), song.getTitle(), blockResponses);
+            log.info("getSongCalls - end. status: success, blockCount: {}", response.blocks().size());
+            return response;
+        } catch (Exception e) {
+            log.error("getSongCalls - Error occurred while getting song calls.", e);
+            throw e;
+        }
+    }
+
+    private Site getPublishedSite(String siteKey, String logPrefix) {
+        return siteRepository.findBySiteKeyAndStatus(siteKey, Status.PUBLISHED)
+                .orElseThrow(() -> {
+                    log.warn("{} - Published site was not found. siteKey: {}", logPrefix, siteKey);
+                    return new ResponseStatusException(HttpStatus.NOT_FOUND, "Site not found.");
+                });
+    }
+
+    private Song getSong(Long siteId, Long songId, String logPrefix) {
+        return songRepository.findByIdAndSiteId(songId, siteId)
+                .orElseThrow(() -> {
+                    log.warn("{} - Song was not found. siteId: {}, songId: {}", logPrefix, siteId, songId);
+                    return new ResponseStatusException(HttpStatus.NOT_FOUND, "Song not found.");
+                });
+    }
+
+    private ReleaseSong selectPrimaryRelease(List<ReleaseSong> releases) {
+        return releases.stream()
+                .sorted(Comparator
+                        .comparing((ReleaseSong releaseSong) -> !Boolean.TRUE.equals(releaseSong.getIsPrimary()))
+                        .thenComparing(releaseSong -> !Boolean.TRUE.equals(releaseSong.getIsTitleTrack()))
+                        .thenComparing(ReleaseSong::getDisplayOrder)
+                        .thenComparing(ReleaseSong::getId))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private SongDetailResponse.PrimaryReleaseResponse toPrimaryReleaseResponse(ReleaseSong releaseSong) {
+        if (releaseSong == null || releaseSong.getRelease() == null) {
+            return null;
+        }
+
+        return new SongDetailResponse.PrimaryReleaseResponse(
+                releaseSong.getRelease().getId(),
+                releaseSong.getRelease().getTitle(),
+                releaseSong.getRelease().getReleaseDate(),
+                releaseSong.getIsTitleTrack());
+    }
+
+    private SongDetailResponse.ReleaseResponse toReleaseResponse(ReleaseSong releaseSong) {
+        return new SongDetailResponse.ReleaseResponse(
+                releaseSong.getRelease().getId(),
+                releaseSong.getRelease().getTitle(),
+                releaseSong.getRelease().getReleaseDate(),
+                releaseSong.getTrackNumber(),
+                releaseSong.getIsPrimary(),
+                releaseSong.getIsTitleTrack());
+    }
+
+    private SongCallResponse.CallItemResponse toCallItemResponse(
+            SongCallItem callItem,
+            Map<String, CallTypeMaster> callTypeMap) {
+        String normalizedCallTypeCode = CallType.fromCode(callItem.getCallTypeCode()).getCode();
+        CallTypeMaster callTypeMaster = callTypeMap.get(normalizedCallTypeCode);
+        String colorHex = callItem.getStyleColorHex() != null ? callItem.getStyleColorHex()
+                : callTypeMaster != null ? callTypeMaster.getColorHex() : null;
+        String iconKey = callTypeMaster != null ? callTypeMaster.getIconKey() : null;
+        String callTypeLabel = callTypeMaster != null ? callTypeMaster.getCallTypeLabel() : normalizedCallTypeCode;
+
+        return new SongCallResponse.CallItemResponse(
+                callItem.getId(),
+                normalizedCallTypeCode,
+                callTypeLabel,
+                callItem.getCallText(),
+                new SongCallResponse.StyleResponse(colorHex, iconKey));
     }
 }
