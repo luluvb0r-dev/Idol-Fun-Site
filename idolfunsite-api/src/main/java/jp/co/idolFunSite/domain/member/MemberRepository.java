@@ -1,6 +1,8 @@
 package jp.co.idolFunSite.domain.member;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import java.util.List;
 
@@ -22,5 +24,12 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
      * @param groupId グループのID
      * @return 該当グループのメンバーのリスト
      */
-    List<Member> findByGroupId(Long groupId);
+    @Query("""
+            SELECT m
+            FROM Member m
+            JOIN MemberGroupHistory mgh ON mgh.member = m
+            WHERE mgh.group.id = :groupId
+            ORDER BY mgh.displayOrder ASC, m.displayOrder ASC, m.id ASC
+            """)
+    List<Member> findByGroupId(@Param("groupId") Long groupId);
 }
