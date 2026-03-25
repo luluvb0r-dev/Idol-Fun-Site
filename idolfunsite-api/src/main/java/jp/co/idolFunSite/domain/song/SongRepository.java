@@ -1,10 +1,20 @@
 package jp.co.idolFunSite.domain.song;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
 public interface SongRepository extends JpaRepository<Song, Long> {
     List<Song> findBySiteId(Long siteId);
+
+    Page<Song> findBySiteId(Long siteId, Pageable pageable);
+
+    @Query("SELECT s FROM Song s WHERE s.site.id = :siteId AND (s.title LIKE %:keyword% OR s.titleKana LIKE %:keyword% OR s.titleRoman LIKE %:keyword%)")
+    Page<Song> findBySiteIdAndKeyword(@Param("siteId") Long siteId, @Param("keyword") String keyword,
+            Pageable pageable);
 }
