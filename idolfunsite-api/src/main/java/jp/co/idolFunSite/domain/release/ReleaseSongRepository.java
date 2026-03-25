@@ -12,6 +12,15 @@ public interface ReleaseSongRepository extends JpaRepository<ReleaseSong, Long> 
     List<ReleaseSong> findBySongId(Long songId);
 
     /**
+     * 楽曲に紐づく掲載作品情報を表示順で取得します。
+     *
+     * @param songId 楽曲ID
+     * @return 掲載作品一覧
+     */
+    @EntityGraph(attributePaths = {"song", "release"})
+    List<ReleaseSong> findBySongIdOrderByDisplayOrderAscIdAsc(Long songId);
+
+    /**
      * 楽曲ID一覧に紐づく掲載作品情報をまとめて取得します。
      *
      * @param songIds 楽曲ID一覧

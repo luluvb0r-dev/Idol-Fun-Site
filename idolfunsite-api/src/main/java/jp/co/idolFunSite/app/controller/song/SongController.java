@@ -1,5 +1,7 @@
 package jp.co.idolFunSite.app.controller.song;
 
+import jp.co.idolFunSite.app.dto.song.SongCallResponse;
+import jp.co.idolFunSite.app.dto.song.SongDetailResponse;
 import jp.co.idolFunSite.app.dto.song.SongListResponse;
 import jp.co.idolFunSite.app.dto.song.SongSearchCondition;
 import jp.co.idolFunSite.app.service.song.SongService;
@@ -69,6 +71,52 @@ public class SongController {
             return response;
         } catch (Exception e) {
             log.error("getSongs - Error occurred while processing request.", e);
+            throw e;
+        }
+    }
+
+    /**
+     * 楽曲詳細を取得します。
+     *
+     * @param siteKey サイト識別子
+     * @param songId  楽曲ID
+     * @return 楽曲詳細レスポンス
+     */
+    @GetMapping("/{songId}")
+    public SongDetailResponse getSongDetail(
+            @PathVariable("siteKey") String siteKey,
+            @PathVariable("songId") Long songId) {
+
+        log.info("getSongDetail - start. siteKey: {}, songId: {}", siteKey, songId);
+        try {
+            SongDetailResponse response = songService.getSongDetail(siteKey, songId);
+            log.info("getSongDetail - end. status: success, songId: {}", response.songId());
+            return response;
+        } catch (Exception e) {
+            log.error("getSongDetail - Error occurred while processing request.", e);
+            throw e;
+        }
+    }
+
+    /**
+     * 楽曲コール情報を取得します。
+     *
+     * @param siteKey サイト識別子
+     * @param songId  楽曲ID
+     * @return 楽曲コールレスポンス
+     */
+    @GetMapping("/{songId}/calls")
+    public SongCallResponse getSongCalls(
+            @PathVariable("siteKey") String siteKey,
+            @PathVariable("songId") Long songId) {
+
+        log.info("getSongCalls - start. siteKey: {}, songId: {}", siteKey, songId);
+        try {
+            SongCallResponse response = songService.getSongCalls(siteKey, songId);
+            log.info("getSongCalls - end. status: success, songId: {}", response.songId());
+            return response;
+        } catch (Exception e) {
+            log.error("getSongCalls - Error occurred while processing request.", e);
             throw e;
         }
     }

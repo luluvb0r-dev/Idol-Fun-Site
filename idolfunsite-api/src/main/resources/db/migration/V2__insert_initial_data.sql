@@ -18,12 +18,12 @@ WHERE site_key = 'equal-love';
 
 -- 4. Call Type Master
 INSERT INTO call_type_master (site_id, call_type_code, call_type_label, color_hex, icon_key, description, display_order)
-SELECT id, 'CHANT', 'Response', '#F06292', 'mic', 'Audience response call', 1
+SELECT id, 'CHANT', '掛け声', '#F06292', 'mic', 'Audience response call', 1
 FROM site
 WHERE site_key = 'equal-love';
 
 INSERT INTO call_type_master (site_id, call_type_code, call_type_label, color_hex, icon_key, description, display_order)
-SELECT id, 'CLAP', 'Clap', '#FFCA28', 'front_hand', 'Clap along with the song', 2
+SELECT id, 'CLAP', 'クラップ', '#FFCA28', 'hands', 'Clap along with the song', 2
 FROM site
 WHERE site_key = 'equal-love';
 

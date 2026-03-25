@@ -17,6 +17,15 @@ public interface SongRepository extends JpaRepository<Song, Long> {
     Page<Song> findBySiteId(Long siteId, Pageable pageable);
 
     /**
+     * サイト配下の楽曲を1件取得します。
+     *
+     * @param id     楽曲ID
+     * @param siteId サイトID
+     * @return 楽曲
+     */
+    java.util.Optional<Song> findByIdAndSiteId(Long id, Long siteId);
+
+    /**
      * 条件に一致する楽曲を検索します。
      *
      * @param siteId       サイトID

@@ -1,6 +1,7 @@
 package jp.co.idolFunSite.domain.call;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.stereotype.Repository;
 import java.util.List;
 
@@ -15,5 +16,6 @@ public interface SongCallBlockRepository extends JpaRepository<SongCallBlock, Lo
      * @param songId 楽曲ID
      * @return 歌詞ブロックのリスト
      */
+    @EntityGraph(attributePaths = {"song"})
     List<SongCallBlock> findBySongIdOrderByOrderNoAsc(Long songId);
 }
