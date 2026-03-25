@@ -2,8 +2,11 @@ package jp.co.idolFunSite.app.service.song;
 
 import jp.co.idolFunSite.app.dto.song.SongListResponse;
 import jp.co.idolFunSite.app.dto.song.SongSearchCondition;
+import jp.co.idolFunSite.domain.common.Status;
 import jp.co.idolFunSite.domain.release.ReleaseSong;
 import jp.co.idolFunSite.domain.release.ReleaseSongRepository;
+import jp.co.idolFunSite.domain.site.Site;
+import jp.co.idolFunSite.domain.site.SiteRepository;
 import jp.co.idolFunSite.domain.song.Song;
 import jp.co.idolFunSite.domain.song.SongMember;
 import jp.co.idolFunSite.domain.song.SongMemberRepository;
@@ -13,9 +16,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -29,12 +35,14 @@ public class SongService {
 
     private static final Logger log = LoggerFactory.getLogger(SongService.class);
 
+    private final SiteRepository siteRepository;
     private final SongRepository songRepository;
     private final SongMemberRepository songMemberRepository;
     private final ReleaseSongRepository releaseSongRepository;
 
-    public SongService(SongRepository songRepository, SongMemberRepository songMemberRepository,
+    public SongService(SiteRepository siteRepository, SongRepository songRepository, SongMemberRepository songMemberRepository,
             ReleaseSongRepository releaseSongRepository) {
+        this.siteRepository = siteRepository;
         this.songRepository = songRepository;
         this.songMemberRepository = songMemberRepository;
         this.releaseSongRepository = releaseSongRepository;
@@ -51,15 +59,27 @@ public class SongService {
         log.info("searchSongs - start. condition: {}, pageable: {}", condition, pageable);
 
         try {
-            Page<Song> songPage;
+            Site site = siteRepository.findBySiteKeyAndStatus(condition.siteKey(), Status.PUBLISHED)
+                    .orElseThrow(() -> {
+                        log.warn("searchSongs - Published site was not found. siteKey: {}", condition.siteKey());
+                        return new ResponseStatusException(HttpStatus.NOT_FOUND, "Site not found.");
+                    });
 
-            if (condition.keyword() != null && !condition.keyword().isBlank()) {
-                log.debug("searchSongs - Keyword is present, searching by keyword: {}", condition.keyword());
-                songPage = songRepository.findBySiteIdAndKeyword(condition.siteId(), condition.keyword(), pageable);
-            } else {
-                log.debug("searchSongs - Keyword is empty, searching all for siteId: {}", condition.siteId());
-                songPage = songRepository.findBySiteId(condition.siteId(), pageable);
-            }
+            log.debug(
+                    "searchSongs - Resolved site. siteId: {}, keyword: {}, releaseId: {}, isTitleTrack: {}, memberId: {}",
+                    site.getId(),
+                    condition.keyword(),
+                    condition.releaseId(),
+                    condition.isTitleTrack(),
+                    condition.memberId());
+
+            Page<Song> songPage = songRepository.searchSongs(
+                    site.getId(),
+                    condition.keyword(),
+                    condition.releaseId(),
+                    condition.isTitleTrack(),
+                    condition.memberId(),
+                    pageable);
 
             List<Long> songIds = songPage.getContent().stream().map(Song::getId).toList();
             log.debug("searchSongs - Fetched {} songs", songIds.size());
@@ -87,14 +107,19 @@ public class SongService {
                 List<SongMember> members = membersBySongId.getOrDefault(song.getId(), List.of());
                 List<String> originalMemberNames = members.stream()
                         .filter(sm -> sm.getRoleType() == SongRoleType.ORIGINAL_VOCAL)
+                        .sorted(Comparator.comparing(SongMember::getDisplayOrder)
+                                .thenComparing(sm -> sm.getMember().getId()))
                         .map(sm -> sm.getMember().getMemberName())
                         .toList();
 
                 List<ReleaseSong> releases = releasesBySongId.getOrDefault(song.getId(), List.of());
 
                 ReleaseSong mainRelease = releases.stream()
-                        .filter(rs -> Boolean.TRUE.equals(rs.getIsTitleTrack())
-                                || Boolean.TRUE.equals(rs.getIsPrimary()))
+                        .sorted(Comparator
+                                .comparing((ReleaseSong rs) -> !Boolean.TRUE.equals(rs.getIsPrimary()))
+                                .thenComparing(rs -> !Boolean.TRUE.equals(rs.getIsTitleTrack()))
+                                .thenComparing(ReleaseSong::getDisplayOrder)
+                                .thenComparing(ReleaseSong::getId))
                         .findFirst()
                         .orElse(releases.isEmpty() ? null : releases.get(0));
 

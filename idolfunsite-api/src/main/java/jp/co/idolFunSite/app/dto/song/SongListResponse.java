@@ -7,7 +7,7 @@ import java.util.List;
  */
 public record SongListResponse(
         Long songId,
-        String songName,
+        String title,
         List<String> originalMembers,
         String singleTitle,
         boolean isTitleTrack) {

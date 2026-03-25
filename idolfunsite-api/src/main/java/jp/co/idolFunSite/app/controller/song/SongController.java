@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.SortDefault;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 楽曲に関するエンドポイントを提供するコントローラーです。
  */
 @RestController
-@RequestMapping("/api/sites/{siteId}/songs")
+@RequestMapping("/api/v1/sites/{siteKey}/songs")
 public class SongController {
 
     private static final Logger log = LoggerFactory.getLogger(SongController.class);
@@ -32,20 +33,37 @@ public class SongController {
     /**
      * 楽曲一覧を取得します。
      *
-     * @param siteId   サイトID
-     * @param keyword  検索キーワード（任意）
-     * @param pageable ページング情報
+     * @param siteKey      サイト識別子
+     * @param keyword      検索キーワード（任意）
+     * @param releaseId    シングル絞り込み条件（任意）
+     * @param isTitleTrack 表題曲絞り込み条件（任意）
+     * @param memberId     メンバー絞り込み条件（任意）
+     * @param pageable     ページング情報
      * @return 楽曲一覧レスポンス
      */
     @GetMapping
     public Page<SongListResponse> getSongs(
-            @PathVariable("siteId") Long siteId,
+            @PathVariable("siteKey") String siteKey,
             @RequestParam(name = "keyword", required = false) String keyword,
-            @PageableDefault(size = 20) Pageable pageable) {
+            @RequestParam(name = "releaseId", required = false) Long releaseId,
+            @RequestParam(name = "isTitleTrack", required = false) Boolean isTitleTrack,
+            @RequestParam(name = "memberId", required = false) Long memberId,
+            @PageableDefault(size = 20)
+            @SortDefault.SortDefaults({
+                    @SortDefault(sort = "displayOrder"),
+                    @SortDefault(sort = "id")
+            }) Pageable pageable) {
 
-        log.info("getSongs - start. siteId: {}, keyword: {}, pageable: {}", siteId, keyword, pageable);
+        log.info(
+                "getSongs - start. siteKey: {}, keyword: {}, releaseId: {}, isTitleTrack: {}, memberId: {}, pageable: {}",
+                siteKey,
+                keyword,
+                releaseId,
+                isTitleTrack,
+                memberId,
+                pageable);
         try {
-            SongSearchCondition condition = new SongSearchCondition(siteId, keyword);
+            SongSearchCondition condition = new SongSearchCondition(siteKey, keyword, releaseId, isTitleTrack, memberId);
             Page<SongListResponse> response = songService.searchSongs(condition, pageable);
             log.info("getSongs - end. status: success, element count: {}", response.getNumberOfElements());
             return response;
