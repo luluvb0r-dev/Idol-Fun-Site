@@ -1,34 +1,63 @@
-'use client';
-import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { articles, members } from './_data/mock';
 
-export default function Home() {
-    const [apiMessage, setApiMessage] = useState<string>('Loading...');
-
-    useEffect(() => {
-        fetch('http://localhost:8080/api/hello')
-            .then((res) => res.json())
-            .then((data) => setApiMessage(data.message))
-            .catch((error) => {
-                console.error('API Error:', error);
-                setApiMessage('エラー: APIサーバーと通信できません');
-            });
-    }, []);
+export default function HomePage() {
+    const featuredMember = members[0];
 
     return (
-        <main className="flex min-h-screen flex-col items-center justify-center p-24 bg-gray-50">
-            <h1 className="text-5xl font-extrabold text-blue-600 drop-shadow-sm">
-                hello,world
-            </h1>
-            <p className="mt-4 text-xl text-gray-500 font-medium">
-                Next.jsとSpring Bootを組み合わせたアプリケーションのフロントエンドです。
-            </p>
+        <div className="page-stack">
+            <section className="hero-panel">
+                <div className="hero-copy">
+                    <span className="eyebrow">=LOVE Fan Experience</span>
+                    <h1>=LOVE の魅力へ自然につながる、やわらかく見やすい一覧画面。</h1>
+                    <p>
+                        ピンク基調のトーンで、記事一覧から詳細、さらにメンバープロフィールへ自然に移動できる骨組みを先に整えています。
+                    </p>
+                </div>
+                <div className="hero-card">
+                    <p className="hero-card__label">注目メンバー</p>
+                    <h2>{featuredMember.name}</h2>
+                    <p>{featuredMember.catchCopy}</p>
+                    <Link href={`/members/${featuredMember.slug}`} className="primary-link">
+                        プロフィールを見る
+                    </Link>
+                </div>
+            </section>
 
-            <div className="mt-10 p-6 bg-white rounded-xl shadow-md border border-gray-100 flex flex-col items-center hover:shadow-lg transition-shadow duration-300">
-                <h2 className="text-sm font-semibold text-gray-400 tracking-wider uppercase mb-2">Message from Spring Boot</h2>
-                <p className="text-2xl font-bold text-gray-800 bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-blue-500">
-                    {apiMessage}
-                </p>
-            </div>
-        </main>
+            <section className="section-block">
+                <div className="section-heading">
+                    <div>
+                        <span className="eyebrow">Article List</span>
+                        <h2>一覧画面の雛形</h2>
+                    </div>
+                    <p>カード単位で情報密度を揃え、詳細遷移をわかりやすくしたレイアウトです。</p>
+                </div>
+                <div className="card-grid">
+                    {articles.map((article) => (
+                        <article key={article.id} className="content-card">
+                            <div className="content-card__meta">
+                                <span>{article.category}</span>
+                                <span>{article.publishedAt}</span>
+                            </div>
+                            <h3>{article.title}</h3>
+                            <p>{article.lead}</p>
+                            <div className="tag-row">
+                                {article.tags.map((tag) => (
+                                    <span key={tag} className="tag-chip">
+                                        {tag}
+                                    </span>
+                                ))}
+                            </div>
+                            <div className="content-card__footer">
+                                <span>{article.memberName}</span>
+                                <Link href={`/posts/${article.id}`} className="text-link">
+                                    詳細へ
+                                </Link>
+                            </div>
+                        </article>
+                    ))}
+                </div>
+            </section>
+        </div>
     );
 }
