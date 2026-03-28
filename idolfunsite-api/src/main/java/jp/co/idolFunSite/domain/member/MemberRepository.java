@@ -1,26 +1,60 @@
 package jp.co.idolFunSite.domain.member;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 import java.util.List;
+import java.util.Optional;
+
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 /**
- * Member エンティティへのデータアクセスを提供するリポジトリ。
+ * Member エンティティへのデータアクセスを提供するリポジトリです。
  */
 @Repository
 public interface MemberRepository extends JpaRepository<Member, Long> {
-    
+
     /**
-     * サイトに属する全メンバー情報を取得します。
-     * @param siteId サイトのID
-     * @return メンバーのリスト
+     * サイト配下の有効なメンバーを表示順で取得します。
+     *
+     * @param siteId サイトID
+     * @param status メンバーステータス
+     * @return メンバー一覧
      */
-    List<Member> findBySiteId(Long siteId);
-    
+    List<Member> findBySiteIdAndStatus(Long siteId, String status, Sort sort);
+
     /**
-     * 所属グループに属するメンバー情報を取得します。
-     * @param groupId グループのID
-     * @return 該当グループのメンバーのリスト
+     * サイト配下の有効なメンバー詳細を取得します。
+     *
+     * @param id メンバーID
+     * @param siteId サイトID
+     * @param status メンバーステータス
+     * @return メンバー
      */
-    List<Member> findByGroupId(Long groupId);
+    Optional<Member> findByIdAndSiteIdAndStatus(Long id, Long siteId, String status);
+
+    /**
+     * サイト配下のメンバー詳細を取得します。
+     *
+     * @param id メンバーID
+     * @param siteId サイトID
+     * @return メンバー
+     */
+    Optional<Member> findByIdAndSiteId(Long id, Long siteId);
+
+    /**
+     * 指定グループに所属するメンバー一覧を取得します。
+     *
+     * @param groupId グループID
+     * @return 所属グループのメンバー一覧
+     */
+    @Query("""
+            SELECT m
+            FROM Member m
+            JOIN MemberGroupHistory mgh ON mgh.member = m
+            WHERE mgh.group.id = :groupId
+            ORDER BY mgh.displayOrder ASC, m.displayOrder ASC, m.id ASC
+            """)
+    List<Member> findByGroupId(@Param("groupId") Long groupId);
 }
