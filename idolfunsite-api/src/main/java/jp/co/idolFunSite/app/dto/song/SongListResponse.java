@@ -1,5 +1,6 @@
 package jp.co.idolFunSite.app.dto.song;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -8,7 +9,26 @@ import java.util.List;
 public record SongListResponse(
         Long songId,
         String title,
-        List<String> originalMembers,
-        String singleTitle,
-        boolean isTitleTrack) {
+        String titleKana,
+        PrimaryReleaseResponse primaryRelease,
+        List<OriginalMemberResponse> originalMembers,
+        Boolean hasCallData) {
+
+    /**
+     * 代表作品情報です。
+     */
+    public record PrimaryReleaseResponse(
+            Long releaseId,
+            String title,
+            LocalDate releaseDate,
+            Boolean isTitleTrack) {
+    }
+
+    /**
+     * 一覧用オリジナル歌唱メンバーです。
+     */
+    public record OriginalMemberResponse(
+            Long memberId,
+            String name) {
+    }
 }

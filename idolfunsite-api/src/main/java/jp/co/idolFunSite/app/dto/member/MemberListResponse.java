@@ -11,5 +11,14 @@ public record MemberListResponse(
         LocalDate birthday,
         String memberColor,
         String memberColorHex,
-        String shortBio) {
+        CurrentGroupResponse currentGroup,
+        String profileImageUrl) {
+
+    /**
+     * 現在所属グループです。
+     */
+    public record CurrentGroupResponse(
+            Long groupId,
+            String groupName) {
+    }
 }

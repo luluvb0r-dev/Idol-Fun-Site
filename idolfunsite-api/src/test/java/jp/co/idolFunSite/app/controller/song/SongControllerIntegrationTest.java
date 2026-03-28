@@ -105,11 +105,16 @@ class SongControllerIntegrationTest {
         mockMvc.perform(get("/api/v1/sites/{siteKey}/songs", fixture.site.getSiteKey())
                         .param("keyword", "てすと別名"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].songId").value(fixture.song.getId()))
-                .andExpect(jsonPath("$.content[0].title").value("テスト楽曲"))
-                .andExpect(jsonPath("$.content[0].singleTitle").value("テストシングル"))
-                .andExpect(jsonPath("$.content[0].isTitleTrack").value(true))
-                .andExpect(jsonPath("$.content[0].originalMembers[0]").value("メンバーA"));
+                .andExpect(jsonPath("$.data.items[0].songId").value(fixture.song.getId()))
+                .andExpect(jsonPath("$.data.items[0].title").value("テスト楽曲"))
+                .andExpect(jsonPath("$.data.items[0].titleKana").value("てすとがっきょく"))
+                .andExpect(jsonPath("$.data.items[0].primaryRelease.title").value("テストシングル"))
+                .andExpect(jsonPath("$.data.items[0].primaryRelease.isTitleTrack").value(true))
+                .andExpect(jsonPath("$.data.items[0].originalMembers[0].name").value("メンバーA"))
+                .andExpect(jsonPath("$.data.items[0].hasCallData").value(true))
+                .andExpect(jsonPath("$.data.pagination.totalElements").value(1))
+                .andExpect(jsonPath("$.meta.version").value("v1"))
+                .andExpect(jsonPath("$.errors.length()").value(0));
     }
 
     @Test
@@ -118,13 +123,14 @@ class SongControllerIntegrationTest {
 
         mockMvc.perform(get("/api/v1/sites/{siteKey}/songs/{songId}", fixture.site.getSiteKey(), fixture.song.getId()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.songId").value(fixture.song.getId()))
-                .andExpect(jsonPath("$.title").value("テスト楽曲"))
-                .andExpect(jsonPath("$.description").value("詳細説明"))
-                .andExpect(jsonPath("$.primaryRelease.title").value("テストシングル"))
-                .andExpect(jsonPath("$.releases.length()").value(2))
-                .andExpect(jsonPath("$.originalMembers.length()").value(2))
-                .andExpect(jsonPath("$.originalMembers[0].name").value("メンバーA"));
+                .andExpect(jsonPath("$.data.songId").value(fixture.song.getId()))
+                .andExpect(jsonPath("$.data.title").value("テスト楽曲"))
+                .andExpect(jsonPath("$.data.description").value("詳細説明"))
+                .andExpect(jsonPath("$.data.primaryRelease.title").value("テストシングル"))
+                .andExpect(jsonPath("$.data.releases.length()").value(2))
+                .andExpect(jsonPath("$.data.originalMembers.length()").value(2))
+                .andExpect(jsonPath("$.data.originalMembers[0].name").value("メンバーA"))
+                .andExpect(jsonPath("$.meta.version").value("v1"));
     }
 
     @Test
@@ -133,15 +139,16 @@ class SongControllerIntegrationTest {
 
         mockMvc.perform(get("/api/v1/sites/{siteKey}/songs/{songId}/calls", fixture.site.getSiteKey(), fixture.song.getId()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.songId").value(fixture.song.getId()))
-                .andExpect(jsonPath("$.blocks.length()").value(1))
-                .andExpect(jsonPath("$.blocks[0].blockType").value("VERSE"))
-                .andExpect(jsonPath("$.blocks[0].lines[0].lyrics").value("歌詞1行目"))
-                .andExpect(jsonPath("$.blocks[0].lines[0].calls.length()").value(2))
-                .andExpect(jsonPath("$.blocks[0].lines[0].calls[0].callTypeCode").value("CHANT"))
-                .andExpect(jsonPath("$.blocks[0].lines[0].calls[0].callTypeLabel").value("掛け声"))
-                .andExpect(jsonPath("$.blocks[0].lines[0].calls[1].callTypeCode").value("CLAP"))
-                .andExpect(jsonPath("$.blocks[0].lines[0].calls[1].callTypeLabel").value("クラップ"));
+                .andExpect(jsonPath("$.data.songId").value(fixture.song.getId()))
+                .andExpect(jsonPath("$.data.blocks.length()").value(1))
+                .andExpect(jsonPath("$.data.blocks[0].blockType").value("VERSE"))
+                .andExpect(jsonPath("$.data.blocks[0].lines[0].lyrics").value("歌詞1行目"))
+                .andExpect(jsonPath("$.data.blocks[0].lines[0].calls.length()").value(2))
+                .andExpect(jsonPath("$.data.blocks[0].lines[0].calls[0].callTypeCode").value("CHANT"))
+                .andExpect(jsonPath("$.data.blocks[0].lines[0].calls[0].callTypeLabel").value("掛け声"))
+                .andExpect(jsonPath("$.data.blocks[0].lines[0].calls[1].callTypeCode").value("CLAP"))
+                .andExpect(jsonPath("$.data.blocks[0].lines[0].calls[1].callTypeLabel").value("クラップ"))
+                .andExpect(jsonPath("$.meta.version").value("v1"));
     }
 
     private TestFixture createFixture() {

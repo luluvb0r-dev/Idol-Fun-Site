@@ -1,5 +1,7 @@
 package jp.co.idolFunSite.app.controller.song;
 
+import jp.co.idolFunSite.app.dto.common.PagedItemListResponse;
+import jp.co.idolFunSite.app.dto.common.PaginationResponse;
 import jp.co.idolFunSite.app.dto.song.SongCallResponse;
 import jp.co.idolFunSite.app.dto.song.SongDetailResponse;
 import jp.co.idolFunSite.app.dto.song.SongListResponse;
@@ -44,7 +46,7 @@ public class SongController {
      * @return 楽曲一覧レスポンス
      */
     @GetMapping
-    public Page<SongListResponse> getSongs(
+    public PagedItemListResponse<SongListResponse> getSongs(
             @PathVariable("siteKey") String siteKey,
             @RequestParam(name = "keyword", required = false) String keyword,
             @RequestParam(name = "releaseId", required = false) Long releaseId,
@@ -68,7 +70,13 @@ public class SongController {
             SongSearchCondition condition = new SongSearchCondition(siteKey, keyword, releaseId, isTitleTrack, memberId);
             Page<SongListResponse> response = songService.searchSongs(condition, pageable);
             log.info("getSongs - end. status: success, element count: {}", response.getNumberOfElements());
-            return response;
+            return new PagedItemListResponse<>(
+                    response.getContent(),
+                    new PaginationResponse(
+                            response.getNumber(),
+                            response.getSize(),
+                            response.getTotalElements(),
+                            response.getTotalPages()));
         } catch (Exception e) {
             log.error("getSongs - Error occurred while processing request.", e);
             throw e;
