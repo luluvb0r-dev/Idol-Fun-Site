@@ -127,13 +127,6 @@ public class SongService {
 
             Page<SongListResponse> result = songPage.map(song -> {
                 List<SongMember> members = membersBySongId.getOrDefault(song.getId(), List.of());
-                List<String> originalMemberNames = members.stream()
-                        .filter(sm -> sm.getRoleType() == SongRoleType.ORIGINAL_VOCAL)
-                        .sorted(Comparator.comparing(SongMember::getDisplayOrder)
-                                .thenComparing(sm -> sm.getMember().getId()))
-                        .map(sm -> sm.getMember().getMemberName())
-                        .toList();
-
                 List<ReleaseSong> releases = releasesBySongId.getOrDefault(song.getId(), List.of());
 
                 ReleaseSong mainRelease = releases.stream()
@@ -145,17 +138,26 @@ public class SongService {
                         .findFirst()
                         .orElse(releases.isEmpty() ? null : releases.get(0));
 
-                String singleTitle = mainRelease != null && mainRelease.getRelease() != null
-                        ? mainRelease.getRelease().getTitle()
-                        : null;
-                boolean isTitleTrack = mainRelease != null && Boolean.TRUE.equals(mainRelease.getIsTitleTrack());
-
                 return new SongListResponse(
                         song.getId(),
                         song.getTitle(),
-                        originalMemberNames,
-                        singleTitle,
-                        isTitleTrack);
+                        song.getTitleKana(),
+                        mainRelease != null && mainRelease.getRelease() != null
+                                ? new SongListResponse.PrimaryReleaseResponse(
+                                        mainRelease.getRelease().getId(),
+                                        mainRelease.getRelease().getTitle(),
+                                        mainRelease.getRelease().getReleaseDate(),
+                                        mainRelease.getIsTitleTrack())
+                                : null,
+                        members.stream()
+                                .filter(sm -> sm.getRoleType() == SongRoleType.ORIGINAL_VOCAL)
+                                .sorted(Comparator.comparing(SongMember::getDisplayOrder)
+                                        .thenComparing(sm -> sm.getMember().getId()))
+                                .map(sm -> new SongListResponse.OriginalMemberResponse(
+                                        sm.getMember().getId(),
+                                        sm.getMember().getMemberName()))
+                                .toList(),
+                        song.getHasCallData());
             });
 
             log.info("searchSongs - end. result size: {}", result.getContent().size());

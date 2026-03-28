@@ -3,6 +3,7 @@ package jp.co.idolFunSite.domain.member;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -21,7 +22,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
      * @param status メンバーステータス
      * @return メンバー一覧
      */
-    List<Member> findBySiteIdAndStatusOrderByDisplayOrderAscIdAsc(Long siteId, String status);
+    List<Member> findBySiteIdAndStatus(Long siteId, String status, Sort sort);
 
     /**
      * サイト配下の有効なメンバー詳細を取得します。
@@ -32,6 +33,15 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
      * @return メンバー
      */
     Optional<Member> findByIdAndSiteIdAndStatus(Long id, Long siteId, String status);
+
+    /**
+     * サイト配下のメンバー詳細を取得します。
+     *
+     * @param id メンバーID
+     * @param siteId サイトID
+     * @return メンバー
+     */
+    Optional<Member> findByIdAndSiteId(Long id, Long siteId);
 
     /**
      * 指定グループに所属するメンバー一覧を取得します。

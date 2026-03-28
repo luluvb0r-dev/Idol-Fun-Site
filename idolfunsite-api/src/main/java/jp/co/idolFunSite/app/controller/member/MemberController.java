@@ -2,13 +2,17 @@ package jp.co.idolFunSite.app.controller.member;
 
 import java.util.List;
 
+import jp.co.idolFunSite.app.dto.common.ItemListResponse;
 import jp.co.idolFunSite.app.dto.member.MemberDetailResponse;
 import jp.co.idolFunSite.app.dto.member.MemberListResponse;
 import jp.co.idolFunSite.app.service.member.MemberService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.SortDefault;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -34,12 +38,18 @@ public class MemberController {
      * @return メンバー一覧
      */
     @GetMapping
-    public List<MemberListResponse> getMembers(@PathVariable("siteKey") String siteKey) {
+    public ItemListResponse<MemberListResponse> getMembers(
+            @PathVariable("siteKey") String siteKey,
+            @RequestParam(name = "status", defaultValue = "ACTIVE") String status,
+            @SortDefault.SortDefaults({
+                    @SortDefault(sort = "displayOrder", direction = Sort.Direction.ASC),
+                    @SortDefault(sort = "id", direction = Sort.Direction.ASC)
+            }) Sort sort) {
         log.info("getMembers - start. siteKey: {}", siteKey);
         try {
-            List<MemberListResponse> response = memberService.getMembers(siteKey);
+            List<MemberListResponse> response = memberService.getMembers(siteKey, status, sort);
             log.info("getMembers - end. status: success, memberCount: {}", response.size());
-            return response;
+            return new ItemListResponse<>(response);
         } catch (Exception e) {
             log.error("getMembers - Error occurred while processing request.", e);
             throw e;
