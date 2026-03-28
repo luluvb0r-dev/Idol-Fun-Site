@@ -2,8 +2,8 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 
 const navItems = [
-    { href: '/', label: '一覧' },
-    { href: '/posts/spring-tour-preview', label: '詳細' },
+    { href: '/', label: 'トップ' },
+    { href: '/songs', label: '楽曲一覧' },
     { href: '/members/hana', label: 'メンバー' },
 ];
 
@@ -29,7 +29,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
             </header>
             <main className="site-main">{children}</main>
             <footer className="site-footer">
-                <p>Step 6: Next.js App Router の画面骨組み</p>
+                <p>Step 7: 楽曲一覧画面を追加</p>
             </footer>
         </div>
     );
