@@ -1,10 +1,17 @@
 import Link from 'next/link';
 import type { CSSProperties } from 'react';
-import { formatSongReleaseDate, type SongCallBlock, type SongCallItem, type SongDetail } from '../_lib/song-api';
+import {
+    formatSongReleaseDate,
+    type CallTypeMaster,
+    type SongCallBlock,
+    type SongCallItem,
+    type SongDetail,
+} from '../_lib/song-api';
 
 type SongDetailProps = {
     song: SongDetail;
     callBlocks: SongCallBlock[];
+    callTypes: CallTypeMaster[];
     hasCallError: boolean;
     isUsingMockData: boolean;
 };
@@ -75,14 +82,15 @@ function getBlockTypeLabel(blockType: string) {
     return 'ブロック';
 }
 
-function getCallTypeMeta(call: SongCallItem): CallTypeMeta {
+function getCallTypeMeta(call: SongCallItem, callTypeMap: Record<string, CallTypeMaster>): CallTypeMeta {
     const fallback = fallbackCallTypeMeta[call.callTypeCode.toUpperCase()] ?? fallbackCallTypeMeta.OTHER;
+    const master = callTypeMap[call.callTypeCode.toUpperCase()];
 
     return {
-        label: call.callTypeLabel || fallback.label,
-        icon: fallback.icon,
+        label: call.callTypeLabel || master?.callTypeLabel || fallback.label,
+        icon: master?.iconKey || fallback.icon,
         className: fallback.className,
-        colorHex: call.style?.colorHex ?? fallback.colorHex,
+        colorHex: call.style?.colorHex ?? master?.colorHex ?? fallback.colorHex,
     };
 }
 
@@ -90,7 +98,26 @@ function getReleaseTrackText(trackNumber: number | null) {
     return trackNumber ? `Track ${trackNumber}` : '収録順未設定';
 }
 
-export function SongDetail({ song, callBlocks, hasCallError, isUsingMockData }: SongDetailProps) {
+export function SongDetail({
+    song,
+    callBlocks,
+    callTypes,
+    hasCallError,
+    isUsingMockData,
+}: SongDetailProps) {
+    const callTypeMap = Object.fromEntries(
+        callTypes.map((callType) => [callType.callTypeCode.toUpperCase(), callType]),
+    );
+    const legendItems =
+        callTypes.length > 0
+            ? callTypes
+            : Object.entries(fallbackCallTypeMeta).map(([callTypeCode, meta]) => ({
+                  callTypeCode,
+                  callTypeLabel: meta.label,
+                  colorHex: meta.colorHex,
+                  iconKey: meta.icon,
+              }));
+
     return (
         <div className="page-stack">
             <nav aria-label="パンくず" className="breadcrumbs">
@@ -178,7 +205,7 @@ export function SongDetail({ song, callBlocks, hasCallError, isUsingMockData }: 
                                                 <div className="song-call-line__calls" aria-label="コール">
                                                     {line.calls.length > 0 ? (
                                                         line.calls.map((call) => {
-                                                            const meta = getCallTypeMeta(call);
+                                                            const meta = getCallTypeMeta(call, callTypeMap);
                                                             return (
                                                                 <div
                                                                     key={call.callId}
@@ -233,16 +260,26 @@ export function SongDetail({ song, callBlocks, hasCallError, isUsingMockData }: 
                         <span className="eyebrow">Call Legend</span>
                         <h2>コール凡例</h2>
                         <div className="song-detail-legend">
-                            <div className="call-pill call-pill__chant">
-                                <span className="call-pill__icon">声</span>
-                                <span className="call-pill__label">掛け声</span>
-                                <strong>レスポンスや合いの手</strong>
-                            </div>
-                            <div className="call-pill call-pill__clap">
-                                <span className="call-pill__icon">拍</span>
-                                <span className="call-pill__label">クラップ</span>
-                                <strong>手拍子のタイミング</strong>
-                            </div>
+                            {legendItems.map((item) => {
+                                const fallback =
+                                    fallbackCallTypeMeta[item.callTypeCode.toUpperCase()] ??
+                                    fallbackCallTypeMeta.OTHER;
+                                return (
+                                    <div
+                                        key={item.callTypeCode}
+                                        className={`call-pill ${fallback.className}`}
+                                        style={
+                                            {
+                                                '--call-accent': item.colorHex ?? fallback.colorHex,
+                                            } as CSSProperties
+                                        }
+                                    >
+                                        <span className="call-pill__icon">{item.iconKey ?? fallback.icon}</span>
+                                        <span className="call-pill__label">{item.callTypeLabel}</span>
+                                        <strong>{item.callTypeCode}</strong>
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
 
