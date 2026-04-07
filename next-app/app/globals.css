@@ -349,6 +349,48 @@ a {
     font-weight: 700;
 }
 
+.hero-actions,
+.theme-swatches,
+.filter-chip-row,
+.member-filter-groups,
+.member-card__header,
+.member-history-item__header {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.member-filter-groups {
+    justify-content: flex-end;
+}
+
+.theme-swatches {
+    margin-top: 8px;
+}
+
+.theme-swatches__item {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.75);
+    box-shadow: inset 0 0 0 1px rgba(68, 35, 54, 0.06);
+}
+
+.filter-chip {
+    padding: 10px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(232, 93, 149, 0.18);
+    background: rgba(255, 255, 255, 0.72);
+    color: var(--primary-strong);
+    font-weight: 700;
+}
+
+.filter-chip__active {
+    background: linear-gradient(135deg, var(--primary), #ff8eb7);
+    color: #fff;
+}
+
 .text-link {
     color: var(--primary-strong);
     font-weight: 700;
@@ -862,6 +904,192 @@ a {
     box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.88);
 }
 
+.member-card-grid,
+.member-profile-grid,
+.member-history-list,
+.member-current-groups {
+    display: grid;
+    gap: 18px;
+}
+
+.member-card-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: 24px;
+}
+
+.member-card-link {
+    display: block;
+}
+
+.member-card {
+    display: grid;
+    gap: 0;
+    height: 100%;
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(232, 93, 149, 0.14);
+    background: var(--panel-strong);
+    overflow: hidden;
+    transition:
+        transform 180ms ease,
+        box-shadow 180ms ease,
+        border-color 180ms ease;
+}
+
+.member-card-link:hover .member-card,
+.member-card-link:focus-visible .member-card {
+    transform: translateY(-2px);
+    border-color: rgba(232, 93, 149, 0.26);
+    box-shadow: 0 28px 60px rgba(184, 74, 123, 0.16);
+}
+
+.member-card__image,
+.member-card__placeholder,
+.member-detail-hero__image,
+.member-detail-hero__placeholder {
+    display: grid;
+    place-items: center;
+    min-height: 220px;
+    background-position: center;
+    background-size: cover;
+}
+
+.member-card__placeholder span,
+.member-detail-hero__placeholder span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 84px;
+    height: 84px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.82);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.member-card__body {
+    display: grid;
+    gap: 16px;
+    padding: 22px;
+}
+
+.member-card__header h3,
+.member-card__body h3,
+.member-profile-card strong,
+.member-history-item strong {
+    margin: 0;
+    font-family: Georgia, "Times New Roman", serif;
+}
+
+.member-card__header p,
+.member-card__body p,
+.member-history-item p,
+.member-profile-card span,
+.member-current-groups span {
+    margin: 0;
+    color: var(--text-soft);
+}
+
+.member-card__details {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin: 0;
+}
+
+.member-card__details div,
+.member-profile-card {
+    display: grid;
+    gap: 6px;
+    padding: 14px 16px;
+    border-radius: 18px;
+    background: rgba(255, 248, 252, 0.88);
+    border: 1px solid rgba(232, 93, 149, 0.12);
+}
+
+.member-card__details dt,
+.member-card__details dd {
+    margin: 0;
+}
+
+.member-card__details dd {
+    font-weight: 700;
+}
+
+.member-card__compact {
+    grid-template-columns: 112px minmax(0, 1fr);
+    align-items: stretch;
+}
+
+.member-card__compact .member-card__placeholder {
+    min-height: 112px;
+}
+
+.member-card__compact .member-card__placeholder span {
+    width: 56px;
+    height: 56px;
+    font-size: 1.5rem;
+}
+
+.member-detail-hero {
+    align-items: stretch;
+}
+
+.member-detail-hero__copy {
+    display: grid;
+    gap: 16px;
+    align-content: center;
+}
+
+.member-profile-panel,
+.member-side-panel,
+.member-history-section {
+    display: grid;
+    gap: 20px;
+}
+
+.member-profile-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.member-history-item {
+    position: relative;
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr);
+    gap: 14px;
+    align-items: start;
+}
+
+.member-history-item__line {
+    position: relative;
+    width: 2px;
+    min-height: 100%;
+    margin: 0 auto;
+    background: rgba(232, 93, 149, 0.2);
+}
+
+.member-history-item__line::before {
+    content: "";
+    position: absolute;
+    top: 4px;
+    left: 50%;
+    width: 12px;
+    height: 12px;
+    border-radius: 999px;
+    background: var(--primary);
+    transform: translateX(-50%);
+    box-shadow: 0 0 0 4px rgba(255, 228, 239, 0.9);
+}
+
+.member-history-item__body {
+    display: grid;
+    gap: 10px;
+    padding: 16px 18px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.82);
+    border: 1px solid rgba(232, 93, 149, 0.12);
+}
+
 @media (max-width: 900px) {
     .site-header__inner,
     .section-heading,
@@ -879,8 +1107,12 @@ a {
     .card-grid,
     .stats-grid,
     .song-card-grid,
+    .member-card-grid,
+    .member-profile-grid,
     .song-card__details,
-    .song-search-form {
+    .song-search-form,
+    .member-card__details,
+    .member-card__compact {
         grid-template-columns: 1fr;
     }
 
@@ -891,7 +1123,9 @@ a {
     .song-card__header,
     .song-search-actions,
     .song-call-block__header,
-    .song-release-card__head {
+    .song-release-card__head,
+    .member-card__header,
+    .member-history-item__header {
         flex-direction: column;
         align-items: flex-start;
     }
@@ -940,5 +1174,10 @@ a {
 
     .call-pill strong {
         grid-column: 1 / -1;
+    }
+
+    .member-detail-hero__image,
+    .member-detail-hero__placeholder {
+        min-height: 180px;
     }
 }

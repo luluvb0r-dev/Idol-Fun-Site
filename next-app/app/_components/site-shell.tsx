@@ -4,10 +4,16 @@ import type { ReactNode } from 'react';
 const navItems = [
     { href: '/', label: 'トップ' },
     { href: '/songs', label: '楽曲一覧' },
-    { href: '/members/hana', label: 'メンバー' },
+    { href: '/members', label: 'メンバー' },
 ];
 
-export function SiteShell({ children }: { children: ReactNode }) {
+type SiteShellProps = {
+    children: ReactNode;
+    siteName: string;
+    idolName: string;
+};
+
+export function SiteShell({ children, siteName, idolName }: SiteShellProps) {
     return (
         <div className="site-frame">
             <div className="ambient ambient-left" />
@@ -15,8 +21,8 @@ export function SiteShell({ children }: { children: ReactNode }) {
             <header className="site-header">
                 <div className="site-header__inner">
                     <Link href="/" className="brand-mark">
-                        <span className="brand-mark__eyebrow">=LOVE Fan Site</span>
-                        <span className="brand-mark__title">Pink Mood Archive</span>
+                        <span className="brand-mark__eyebrow">{idolName} Fan Site</span>
+                        <span className="brand-mark__title">{siteName}</span>
                     </Link>
                     <nav className="site-nav" aria-label="主要ナビゲーション">
                         {navItems.map((item) => (
@@ -29,7 +35,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
             </header>
             <main className="site-main">{children}</main>
             <footer className="site-footer">
-                <p>Step 7: 楽曲一覧画面を追加</p>
+                <p>{idolName} の楽曲とメンバーを見やすく追えるファンサイト</p>
             </footer>
         </div>
     );

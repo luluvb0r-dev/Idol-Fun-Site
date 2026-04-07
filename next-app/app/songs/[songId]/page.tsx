@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { SongDetail as SongDetailView } from '../../_components/song-detail';
 import { getMockSongCalls, getMockSongDetail } from '../../_data/song-detail-mock';
-import { fetchSongCalls, fetchSongDetail } from '../../_lib/song-api';
+import { fetchCallTypes, fetchSongCalls, fetchSongDetail } from '../../_lib/song-api';
 
 type SongDetailPageProps = {
     params: {
@@ -50,6 +50,7 @@ export default async function SongDetailPage({ params }: SongDetailPageProps) {
         fetchSongDetail(songId),
         fetchSongCalls(songId),
     ]);
+    const callTypesResult = await Promise.allSettled([fetchCallTypes()]);
 
     const mockSong = getMockSongDetail(songId);
     const mockCalls = getMockSongCalls(songId);
@@ -63,11 +64,13 @@ export default async function SongDetailPage({ params }: SongDetailPageProps) {
         callResult.status === 'fulfilled'
             ? callResult.value.blocks
             : mockCalls?.blocks ?? [];
+    const callTypes = callTypesResult[0].status === 'fulfilled' ? callTypesResult[0].value : [];
 
     return (
         <SongDetailView
             song={song}
             callBlocks={calls}
+            callTypes={callTypes}
             hasCallError={callResult.status === 'rejected' && Boolean(song.hasCallData)}
             isUsingMockData={songResult.status === 'rejected'}
         />
